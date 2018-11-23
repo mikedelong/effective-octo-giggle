@@ -26,11 +26,12 @@ if __name__ == '__main__':
     output_folder = '../output/'
 
     usecols = None
-    nrows = 10
+    nrows = 100
     compression = 'gzip'
     df = pd.read_csv(full_input_file, sep=',', usecols=usecols, nrows=nrows, compression=compression)
     logger.info(list(df))
     logger.info(df.shape)
+    logger.info(df.head())
 
     logger.info('done')
 
