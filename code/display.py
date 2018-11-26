@@ -2,6 +2,7 @@ import logging
 from time import time
 
 import pandas as pd
+from numpy import nan
 
 if __name__ == '__main__':
     start_time = time()
@@ -611,6 +612,22 @@ if __name__ == '__main__':
                          dtype={item: str for item in skc_usecols})
     logger.info(skc_df.shape)
     logger.info(list(skc_df))
+    # for item in list(skc_df)[1:10]:
+    #     logger.info(skc_df[item].unique())
+    # # quit()
+
+    # set POB and OBS to NAN
+    for item in ['OBS', 'POB']:
+        skc_df = skc_df.replace(item, nan)
+
+    # here's our label to float map
+    float_values = {
+        'CLR': 0.0,
+        'FEW': 0.25,
+        'SCT': 0.5,
+        'BKN': 0.9,
+        'OVC': 1.0
+    }
 
     isd_file = 'isd-history.csv.gz'
     full_isd_file = input_folder + isd_file
@@ -624,6 +641,63 @@ if __name__ == '__main__':
     # build the locations dictionary
     locations = {'-'.join([str(item[1][0]), str(item[1][1])]): (item[1][2], item[1][3]) for item in isd_df.iterrows()}
     logger.info(locations)
+
+    # for item in skc_usecols[1:]:
+    #     if
+    #     latlon = locations[item]
+    #
+    # # let's plot the first row
+    # if True:
+    #     df = df[(df['CTRY'] == 'US') | (df['CTRY'] == 'CA')]
+    #     logger.info('useful data has shape %s' % str(df.shape))
+    #
+    #     scl = [[0, 'rgb(5, 10, 172)'], [0.35, 'rgb(40, 60, 190)'], [0.5, 'rgb(70, 100, 245)'],
+    #            [0.6, 'rgb(90, 120, 245)'], [0.7, 'rgb(106, 137, 247)'], [1, 'rgb(220, 220, 220)']]
+    #
+    #     # df['output'] = df['STATION NAME'].map(str)
+    #     data = [dict(
+    #         type='scattergeo',
+    #         locationmode='USA-states',
+    #         lon=df['LON'],
+    #         lat=df['LAT'],
+    #         # text=df['output'],
+    #         mode='markers',
+    #         marker=dict(
+    #             size=2,
+    #             opacity=0.8,
+    #             reversescale=True,
+    #             autocolorscale=False,
+    #             symbol='square',
+    #             line=dict(
+    #                 width=1,
+    #                 color='rgba(102, 102, 102)'
+    #             ),
+    #             colorscale=scl,
+    #             cmin=0,
+    #             color=1,  # df['cnt'],
+    #             cmax=1,  # df['cnt'].max(),
+    #             colorbar=dict(
+    #                 title='...'
+    #             )
+    #         ))]
+    #
+    #     layout = dict(
+    #         title='...',
+    #         colorbar=True,
+    #         geo=dict(
+    #             scope='usa',
+    #             projection=dict(type='albers usa'),
+    #             showland=True,
+    #             landcolor='rgb(250, 250, 250)',
+    #             subunitcolor='rgb(217, 217, 217)',
+    #             countrycolor='rgb(217, 217, 217)',
+    #             countrywidth=0.5,
+    #             subunitwidth=0.5
+    #         ),
+    #     )
+    #
+    #     fig = dict(data=data, layout=layout)
+    #     plot(fig, validate=False, filename='../output/display.html', show_link=False)
 
 
     logger.info('done')
