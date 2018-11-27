@@ -3,6 +3,7 @@ from time import time
 
 import pandas as pd
 from numpy import nan
+from plotly.offline import plot
 
 if __name__ == '__main__':
     start_time = time()
@@ -24,7 +25,7 @@ if __name__ == '__main__':
     full_skc_file = input_folder + skc_file
     logger.info('loading SKC data from %s ' % full_skc_file)
     yr_modahrmn = 'YR--MODAHRMN'
-    nrows = None
+    nrows = 1
     skc_usecols = ['YR--MODAHRMN', '690150-93121', '700197-26558', '700260-27502', '700300-27503', '700632-26645',
                    '700634-27408', '700635-26465', '700637-27406', '700638-99999', '700860-27401', '701040-26631',
                    '701043-26623', '701045-26649', '701170-26634', '701190-99999', '701195-26625', '701210-26624',
@@ -612,9 +613,6 @@ if __name__ == '__main__':
                          dtype={item: str for item in skc_usecols})
     logger.info(skc_df.shape)
     logger.info(list(skc_df))
-    # for item in list(skc_df)[1:10]:
-    #     logger.info(skc_df[item].unique())
-    # # quit()
 
     # set POB and OBS to NAN
     for item in ['OBS', 'POB']:
@@ -642,63 +640,67 @@ if __name__ == '__main__':
     locations = {'-'.join([str(item[1][0]), str(item[1][1])]): (item[1][2], item[1][3]) for item in isd_df.iterrows()}
     logger.info(locations)
 
-    # for item in skc_usecols[1:]:
-    #     if
-    #     latlon = locations[item]
-    #
-    # # let's plot the first row
-    # if True:
-    #     df = df[(df['CTRY'] == 'US') | (df['CTRY'] == 'CA')]
-    #     logger.info('useful data has shape %s' % str(df.shape))
-    #
-    #     scl = [[0, 'rgb(5, 10, 172)'], [0.35, 'rgb(40, 60, 190)'], [0.5, 'rgb(70, 100, 245)'],
-    #            [0.6, 'rgb(90, 120, 245)'], [0.7, 'rgb(106, 137, 247)'], [1, 'rgb(220, 220, 220)']]
-    #
-    #     # df['output'] = df['STATION NAME'].map(str)
-    #     data = [dict(
-    #         type='scattergeo',
-    #         locationmode='USA-states',
-    #         lon=df['LON'],
-    #         lat=df['LAT'],
-    #         # text=df['output'],
-    #         mode='markers',
-    #         marker=dict(
-    #             size=2,
-    #             opacity=0.8,
-    #             reversescale=True,
-    #             autocolorscale=False,
-    #             symbol='square',
-    #             line=dict(
-    #                 width=1,
-    #                 color='rgba(102, 102, 102)'
-    #             ),
-    #             colorscale=scl,
-    #             cmin=0,
-    #             color=1,  # df['cnt'],
-    #             cmax=1,  # df['cnt'].max(),
-    #             colorbar=dict(
-    #                 title='...'
-    #             )
-    #         ))]
-    #
-    #     layout = dict(
-    #         title='...',
-    #         colorbar=True,
-    #         geo=dict(
-    #             scope='usa',
-    #             projection=dict(type='albers usa'),
-    #             showland=True,
-    #             landcolor='rgb(250, 250, 250)',
-    #             subunitcolor='rgb(217, 217, 217)',
-    #             countrycolor='rgb(217, 217, 217)',
-    #             countrywidth=0.5,
-    #             subunitwidth=0.5
-    #         ),
-    #     )
-    #
-    #     fig = dict(data=data, layout=layout)
-    #     plot(fig, validate=False, filename='../output/display.html', show_link=False)
+    # let's plot the first row
+    df = skc_df.dropna(axis=1)
+    places_to_drop = [item for item in list(df) if item not in locations.keys()]
+    df = df.drop(places_to_drop, axis=1)
+    # todo how many are we losing here?
+    places = list(df)[1:]
+    latlons = [locations[item] for item in places]
+    lats = [item[0] for item in latlons]
+    lons = [item[1] for item in latlons]
+    t0 = df.iloc[0]
+    values = [float_values[item] for item in df.iloc[0].values[1:]]
 
+    scl = [[0, 'rgb(5, 10, 172)'], [0.25, 'rgb(40, 60, 190)'], [0.5, 'rgb(70, 100, 245)'],
+           # [0.6, 'rgb(90, 120, 245)'],
+           [0.9, 'rgb(106, 137, 247)'], [1, 'rgb(220, 220, 220)']]
+
+    data = [dict(
+        type='scattergeo',
+        locationmode='USA-states',
+        # lon=df['LON'],
+        lon=lons,
+        # lat=df['LAT'],
+        lat=lats,
+        # text=df['output'],
+        mode='markers',
+        marker=dict(
+            size=2,
+            opacity=0.8,
+            reversescale=True,
+            autocolorscale=False,
+            symbol='square',
+            line=dict(
+                width=1,
+                color='rgba(102, 102, 102)'
+            ),
+            colorscale=scl,
+            cmin=0,
+            color=values,  # df['cnt'],
+            cmax=1,  # df['cnt'].max(),
+            colorbar=dict(
+                title='...'
+            )
+        ))]
+
+    layout = dict(
+        title='...',
+        colorbar=True,
+        geo=dict(
+            scope='usa',
+            projection=dict(type='albers usa'),
+            showland=True,
+            landcolor='rgb(250, 250, 250)',
+            subunitcolor='rgb(217, 217, 217)',
+            countrycolor='rgb(217, 217, 217)',
+            countrywidth=0.5,
+            subunitwidth=0.5
+        ),
+    )
+
+    fig = dict(data=data, layout=layout)
+    plot(fig, auto_open=False, validate=False, filename='../output/display.html', show_link=False)
 
     logger.info('done')
 
