@@ -666,11 +666,11 @@ if __name__ == '__main__':
         # text=df['output'],
         mode='markers',
         marker=dict(
-            size=2,
+            size=10,
             opacity=0.8,
             reversescale=True,
             autocolorscale=False,
-            symbol='square',
+            symbol='circle',
             line=dict(
                 width=1,
                 color='rgba(102, 102, 102)'
