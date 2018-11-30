@@ -5,6 +5,11 @@ import pandas as pd
 from numpy import nan
 from plotly.offline import plot
 
+
+def get_active(arg_len, arg_index):
+    return [False if index != arg_index else True for index in range(arg_len)]
+
+
 if __name__ == '__main__':
     start_time = time()
 
@@ -627,9 +632,9 @@ if __name__ == '__main__':
         'OVC': 1.0
     }
 
-    scl = [[0, 'rgb(5, 10, 172)'], [0.25, 'rgb(40, 60, 190)'], [0.5, 'rgb(70, 100, 245)'],
-           # [0.6, 'rgb(90, 120, 245)'],
-           [0.9, 'rgb(106, 137, 247)'], [1, 'rgb(220, 220, 220)']]
+    colorscale = [[0, 'rgb(5, 10, 172)'], [0.25, 'rgb(40, 60, 190)'], [0.5, 'rgb(70, 100, 245)'],
+                  # [0.6, 'rgb(90, 120, 245)'],
+                  [0.9, 'rgb(106, 137, 247)'], [1, 'rgb(220, 220, 220)']]
 
     isd_file = 'isd-history.csv.gz'
     full_isd_file = input_folder + isd_file
@@ -642,31 +647,19 @@ if __name__ == '__main__':
 
     # build the locations dictionary
     locations = {'-'.join([str(item[1][0]), str(item[1][1])]): (item[1][2], item[1][3]) for item in isd_df.iterrows()}
-    # logger.info(locations)
 
     # reduce skc_df to just the locations where we have lat-lon data
     places_to_drop = [item for item in list(skc_df) if item not in locations.keys()]
     skc_df = skc_df.drop(places_to_drop, axis=1)
 
-    if False:
-        for row in range(len(skc_df)):
-            logger.info(
-                [locations[item][0] for item in list(skc_df.loc[[row]].dropna(axis=1))][:5]
-            )
-            logger.info(
-                [locations[item][1] for item in list(skc_df.loc[[row]].dropna(axis=1))][:5]
-            )
-            logger.info(
-                [float_values[item] for item in skc_df.loc[[row]].dropna(axis=1).iloc[0].values[1:]][:5]
-            )
-        quit()
     data = [dict(
+        visible=True,
         type='scattergeo',
         locationmode='USA-states',
         # lon=df['LON'],
-        lon=[locations[item][1] for item in list(skc_df.loc[[0]].dropna(axis=1))],
+        lon=[locations[item][1] for item in list(skc_df.loc[[0]].dropna(axis=1))][:5],
         # lat=df['LAT'],
-        lat=[locations[item][0] for item in list(skc_df.loc[[0]].dropna(axis=1))],
+        lat=[locations[item][0] for item in list(skc_df.loc[[0]].dropna(axis=1))][:5],
         # text=df['output'],
         mode='markers',
         marker=dict(
@@ -679,9 +672,9 @@ if __name__ == '__main__':
                 width=1,
                 color='rgba(102, 102, 102)'
             ),
-            colorscale=scl,
+            colorscale=colorscale,
             cmin=0,
-            color=[float_values[item] for item in skc_df.loc[[0]].dropna(axis=1).iloc[0].values[1:]],  # df['cnt'],
+            color=[float_values[item] for item in skc_df.loc[[0]].dropna(axis=1).iloc[0].values[1:]][:5],  # df['cnt'],
             cmax=1,  # df['cnt'].max(),
             colorbar=dict(
                 title='...'
@@ -701,18 +694,19 @@ if __name__ == '__main__':
             countrywidth=0.5,
             subunitwidth=0.5
         ),
-        # updatemenus=[{'type': 'buttons',
-        #               'buttons': [{'label': 'Pl*y',
-        #                            'method': 'animate',
-        #                            'args': [None]}]}]
-    )
+        updatemenus=[
+            {'type': 'buttons',
+             'active': 0,
+             'buttons': [{'label': '----', 'method': 'restyle', 'args': [None]}]}])
+
+    steps = []
 
     frames = [
         dict(
             type='scattergeo',
             locationmode='USA-states',
-            lon=[locations[item][1] for item in list(skc_df.loc[[row]].dropna(axis=1))],
-            lat=[locations[item][0] for item in list(skc_df.loc[[row]].dropna(axis=1))],
+            lon=[locations[item][1] for item in list(skc_df.loc[[row]].dropna(axis=1))][:10],
+            lat=[locations[item][0] for item in list(skc_df.loc[[row]].dropna(axis=1))][:10],
             # text=df['output'],
             mode='markers',
             marker=dict(
@@ -725,45 +719,18 @@ if __name__ == '__main__':
                     width=1,
                     color='rgba(102, 102, 102)'
                 ),
-                colorscale=scl,
+                colorscale=colorscale,
                 cmin=0,
-                color=[float_values[item] for item in skc_df.loc[[row]].dropna(axis=1).iloc[0].values[1:]],
+                color=[float_values[item] for item in skc_df.loc[[row]].dropna(axis=1).iloc[0].values[1:]][:10],
                 cmax=1,
                 colorbar=dict(
-                    title='...'
+                    title=str(row)
                 )
             )) for row in range(len(skc_df))]
 
     logger.info(len(frames))
 
     figure = dict(data=data, layout=layout, frames=frames)
-    figure['layout']['updatemenus'] = [
-        {
-            'buttons': [
-                {
-                    'args': [None, {'frame': {'duration': 500, 'redraw': True},
-                                    'fromcurrent': True,
-                                    'transition': {'duration': 300, 'easing': 'quadratic-in-out'}}],
-                    'label': 'Play',
-                    'method': 'relayout'  # was animate
-                },
-                {
-                    'args': [[None], {'frame': {'duration': 0, 'redraw': True}, 'mode': 'immediate',
-                                      'transition': {'duration': 0}}],
-                    'label': 'Pause',
-                    'method': 'relayout'  # was animate
-                }
-            ],
-            'direction': 'left',
-            'pad': {'r': 10, 't': 87},
-            'showactive': True,
-            'type': 'buttons',
-            'x': 0.1,
-            'xanchor': 'right',
-            'y': 0,
-            'yanchor': 'top'
-        }
-    ]
 
     plot(figure, auto_open=False, validate=False, filename='../output/display.html', show_link=False)
 
