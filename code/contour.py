@@ -652,9 +652,9 @@ if __name__ == '__main__':
     logger.info(isd_df.shape)
     logger.info(list(isd_df))
 
-    # filter out Alaska and Hawaii
+    # filter out Alaska and Hawaii and other outlying places
     logger.info('before dropping Alaska and Hawaii the ISD data is %d x %d' % isd_df.shape)
-    for state in ['AK', 'HI']:
+    for state in ['AK', 'AS', 'FM', 'GU', 'HI', 'JQ', 'VI']:
         isd_df = isd_df[isd_df['STATE'] != state]
         logger.info('after dropping %s the ISD data is %d x %d' % (state, len(isd_df), len(list(isd_df))))
     isd_df = isd_df.drop(['STATE'], axis=1)
