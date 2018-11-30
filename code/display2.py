@@ -639,11 +639,17 @@ if __name__ == '__main__':
     isd_file = 'isd-history.csv.gz'
     full_isd_file = input_folder + isd_file
     # isd_usecols = ['USAF', 'WBAN', 'STATION NAME', 'CTRY', 'STATE', 'ICAO', 'LAT', 'LON', 'ELEV(M)', 'BEGIN', 'END']
-    isd_usecols = ['USAF', 'WBAN', 'LAT', 'LON']
+    isd_usecols = ['USAF', 'WBAN', 'LAT', 'LON', 'STATE']
     logger.info('loading ISD data from %s' % full_isd_file)
     isd_df = pd.read_csv(full_isd_file, compression='gzip', usecols=isd_usecols).dropna()
     logger.info(isd_df.shape)
     logger.info(list(isd_df))
+
+    # just use DMV
+    logger.info('before refining to region of interest the ISD data is %d x %d' % isd_df.shape)
+    isd_df = isd_df[isd_df['STATE'].isin(['DC', 'DE', 'MD', 'NC', 'VA', 'WV'])]
+    isd_df = isd_df.drop(['STATE'], axis=1)
+    logger.info('after refining to region of interest the ISD data is %d x %d' % isd_df.shape)
 
     # build the locations dictionary
     locations = {'-'.join([str(item[1][0]), str(item[1][1])]): (item[1][2], item[1][3]) for item in isd_df.iterrows()}
@@ -705,7 +711,7 @@ if __name__ == '__main__':
     layout = dict(
         colorbar=False,
         geo=dict(
-            scope='usa',
+            # scope='usa',
             projection=dict(type='albers usa'),
             showland=True,
             landcolor='rgb(250, 250, 250)',
